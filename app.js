@@ -1,88 +1,71 @@
 const express = require('express');
 const expressHbs = require('express-handlebars')
 const path = require('path')
-const fs = require('fs')
+const fs = require('fs/promises')
 
-const pathUsers = path.join(__dirname, 'database', 'users.js')
+const {PORT} = require('./config/variables')
 
-const {PORT} = require('./configs/variables')
-const users = require('./database/users')
-
-const app = express();
+const app = express()
 
 app.use(express.json())
 app.use(express.urlencoded({extended: true}))
 
 const staticFolder = path.join(__dirname, 'static')
+const pathUsers = path.join(__dirname, 'db', 'users.json')
 
 app.use(express.static(staticFolder))
-app.set('view engine', '.hbs');
+app.set('view engine', '.hbs')
 app.engine('.hbs', expressHbs({defaultLayout: false}))
 app.set('views', staticFolder)
 
-
 app.get('/', (req, res) => {
     res.render('index')
-});
-
-app.get('/users', (req, res) => {
-    res.render('users', {users})
-});
-
-app.get('/users/:user_id', (req, res) => {
-    const {user_id} = req.params;
-    const currentUser = users[user_id];
-
-    if (!currentUser) {
-        res.status(404).end('User Not Found');
-        return
-    }
-    res.json(currentUser)
-});
+})
 
 app.get('/login', (req, res) => {
     res.render('login')
-});
+})
 
-app.get('/registration', (req, res) => {
-    res.render('register', {users})
-});
+app.get('/register', (req, res) => {
+    res.render('register')
+})
 
-app.post('/login', (req, res) => {
-    const {name, age, gender, email, password} = req.body
+app.post('/login', async (req, res) => {
+    try {
+        const {name, email, password} = req.body
+        const data = await fs.readFile(pathUsers, 'utf-8');
+        const users = JSON.parse(data);
+        users.push({name, email, password})
 
-    users.forEach(user => {
-        if (user.email === email) {
-            res.status(401).end('Email is registered');
-            return
-        }
-        fs.appendFile(pathUsers, JSON.stringify({name, age, gender, email, password}), err => {
-            if (err) {
-                console.log(err)
-                return
-            }
-            console.log('done')
-        });
+        await fs.writeFile(pathUsers, JSON.stringify(users))
         res.render('login')
-    })
-});
+    } catch (e) {
+        console.log(e)
+    }
+})
 
-app.post('/users', (req, res) => {
-    const {email, password} = req.body
+app.get('/calculator', (req, res) => {
+    res.render('calc')
+})
 
-    users.forEach(user => {
-        if (user.email === email && user.password === password) {
-            res.render('users', {users})
-            return
-        }
-        res.render('register')
-    })
-});
+app.post('/calculator', async (req, res) => {
+    try {
+        const {email, password} = req.body
+        const data = await fs.readFile(pathUsers, "utf-8")
+        const users = JSON.parse(data)
+        console.log(users)
+        users.forEach(user => {
+            if (user.email === email && user.password === password) {
+                return res.render('calc')
+            }
+            return res.status(404).end('User Not Found')
+        })
+    } catch (e) {
+        console.log(e)
+    }
+})
+
 
 app.listen(PORT, () => {
     console.log('App listen', PORT)
 })
-
-for (let i = 0; i <4; i++) {
-    users.push({name: 'Bsdad'})
-}
