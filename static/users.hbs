@@ -14,11 +14,13 @@
 {{#each users}}
     <div><b>Name:</b> {{this.name}}</div>
     <div><b>Age:</b> {{this.age}}</div>
+    <div><b>Gender:</b> {{this.gender}}</div>
     <div><b>Email:</b> {{this.email}}</div>
     <div><b>Password:</b> {{this.password}}</div>
     <form action="/users/" method="post">
         <input type="submit" value="more">
     </form>
+    <span>{{user_id}}</span>
     <hr>
 {{/each}}
 

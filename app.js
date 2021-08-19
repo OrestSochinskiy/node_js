@@ -1,88 +1,64 @@
-const express = require('express');
-const expressHbs = require('express-handlebars')
-const path = require('path')
-const fs = require('fs')
+const fs = require('fs');
+const path = require('path');
 
-const pathUsers = path.join(__dirname, 'database', 'users.js')
-
-const {PORT} = require('./configs/variables')
-const users = require('./database/users')
-
-const app = express();
-
-app.use(express.json())
-app.use(express.urlencoded({extended: true}))
-
-const staticFolder = path.join(__dirname, 'static')
-
-app.use(express.static(staticFolder))
-app.set('view engine', '.hbs');
-app.engine('.hbs', expressHbs({defaultLayout: false}))
-app.set('views', staticFolder)
+const pathFile18 = path.join(__dirname, '1800');
+const pathFile20 = path.join(__dirname, '2000');
 
 
-app.get('/', (req, res) => {
-    res.render('index')
-});
-
-app.get('/users', (req, res) => {
-    res.render('users', {users})
-});
-
-app.get('/users/:user_id', (req, res) => {
-    const {user_id} = req.params;
-    const currentUser = users[user_id];
-
-    if (!currentUser) {
-        res.status(404).end('User Not Found');
+fs.readdir(pathFile18, (err, files) => {
+    if (err) {
+        console.log(err);
         return
     }
-    res.json(currentUser)
-});
+    files.forEach(file => {
+        const filePath18 = path.join(pathFile18, file);
+        const filePath20 = path.join(pathFile20, file);
 
-app.get('/login', (req, res) => {
-    res.render('login')
-});
-
-app.get('/registration', (req, res) => {
-    res.render('register', {users})
-});
-
-app.post('/login', (req, res) => {
-    const {name, age, gender, email, password} = req.body
-
-    users.forEach(user => {
-        if (user.email === email) {
-            res.status(401).end('Email is registered');
-            return
-        }
-        fs.appendFile(pathUsers, JSON.stringify({name, age, gender, email, password}), err => {
-            if (err) {
-                console.log(err)
-                return
+        fs.readFile(filePath18, (err1, data) => {
+            if (err1) {
+                console.log(err);
             }
-            console.log('done')
-        });
-        res.render('login')
+            else if (data.toString().includes('female'))
+                return true;
+
+            else {
+                (data.toString().includes('male'));
+                fs.rename(filePath18, filePath20, err2 => {
+                    if (err2) {
+                        console.log(err2)
+                    }
+                    console.log('done')
+                })
+            }
+        })
     })
-});
-
-app.post('/users', (req, res) => {
-    const {email, password} = req.body
-
-    users.forEach(user => {
-        if (user.email === email && user.password === password) {
-            res.render('users', {users})
-            return
-        }
-        res.render('register')
-    })
-});
-
-app.listen(PORT, () => {
-    console.log('App listen', PORT)
 })
 
-for (let i = 0; i <4; i++) {
-    users.push({name: 'Bsdad'})
-}
+
+fs.readdir(pathFile20, (err, files) => {
+    if (err) {
+        console.log(err);
+        return
+    }
+    files.forEach(file => {
+        const filePath18 = path.join(pathFile18, file);
+        const filePath20 = path.join(pathFile20, file);
+
+        fs.readFile(filePath20, (err1, data) => {
+            if (err1) {
+                console.log(err);
+            } else if (data.toString().includes('female'))
+                fs.rename(filePath20, filePath18, err2 => {
+                    if (err2) {
+                        console.log(err2)
+                    }
+                    console.log('done')
+                })
+
+            else {
+                (data.toString().includes('male'))
+                return true
+            }
+        })
+    })
+})
